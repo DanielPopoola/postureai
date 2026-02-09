@@ -14,13 +14,118 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      posture_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posture_alerts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "posture_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posture_sessions: {
+        Row: {
+          average_score: number | null
+          created_at: string
+          ended_at: string | null
+          id: string
+          started_at: string
+          total_alerts: number | null
+          user_id: string
+        }
+        Insert: {
+          average_score?: number | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          total_alerts?: number | null
+          user_id: string
+        }
+        Update: {
+          average_score?: number | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          total_alerts?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      posture_snapshots: {
+        Row: {
+          captured_at: string
+          id: string
+          neck_angle: number | null
+          overall_score: number
+          session_id: string
+          shoulder_alignment: number | null
+          spine_angle: number | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          id?: string
+          neck_angle?: number | null
+          overall_score: number
+          session_id: string
+          shoulder_alignment?: number | null
+          spine_angle?: number | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          id?: string
+          neck_angle?: number | null
+          overall_score?: number
+          session_id?: string
+          shoulder_alignment?: number | null
+          spine_angle?: number | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posture_snapshots_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "posture_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      owns_session: { Args: { _session_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

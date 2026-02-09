@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, ArrowLeft, Bell, Camera, CameraOff, TrendingUp, Clock, Gauge } from "lucide-react";
+import { Activity, ArrowLeft, Bell, Camera, CameraOff, TrendingUp, Clock, Gauge, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import PostureMonitor from "@/components/dashboard/PostureMonitor";
@@ -10,33 +10,61 @@ import SessionHistory from "@/components/dashboard/SessionHistory";
 import AlertsFeed from "@/components/dashboard/AlertsFeed";
 import ErgonomicTips from "@/components/dashboard/ErgonomicTips";
 import { usePoseDetection } from "@/hooks/usePoseDetection";
+import { useAuth } from "@/hooks/useAuth";
+import { usePostureSession } from "@/hooks/usePostureSession";
 import { PostureMetrics } from "@/lib/postureAnalysis";
 
 const Dashboard = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [liveMetrics, setLiveMetrics] = useState<PostureMetrics | null>(null);
+  const prevIssuesRef = useRef<string[]>([]);
+
+  const { startSession, endSession, updateMetrics, saveAlert } = usePostureSession(user?.id);
 
   const handleMetricsUpdate = useCallback((m: PostureMetrics) => {
     setLiveMetrics(m);
-  }, []);
+    updateMetrics(m);
+
+    // Save new alerts that weren't in previous frame
+    const newIssues = m.issues.filter(i => !prevIssuesRef.current.includes(i));
+    newIssues.forEach(issue => saveAlert(issue));
+    prevIssuesRef.current = m.issues;
+  }, [updateMetrics, saveAlert]);
 
   const { videoRef, landmarks, metrics, isLoading, isRunning, error, start, stop } =
     usePoseDetection({ onMetricsUpdate: handleMetricsUpdate });
 
-  const handleToggle = () => {
+  const handleToggle = async () => {
     if (isRunning) {
       stop();
+      await endSession();
       setLiveMetrics(null);
+      prevIssuesRef.current = [];
     } else {
+      await startSession();
       start();
     }
   };
+
+  const handleSignOut = async () => {
+    if (isRunning) {
+      stop();
+      await endSession();
+    }
+    await signOut();
+    navigate("/auth");
+  };
+
+  useEffect(() => {
+    if (!user) navigate("/auth");
+  }, [user, navigate]);
 
   const displayScore = liveMetrics?.overallScore ?? 82;
   const displayStatus = liveMetrics ? (liveMetrics.status === "good" ? "Healthy" : liveMetrics.status === "fair" ? "Needs adjustment" : "Correct now") : "Start monitoring";
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-3">
@@ -65,21 +93,19 @@ const Dashboard = () => {
               {isRunning ? <CameraOff className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
               {isLoading ? "Loading..." : isRunning ? "Stop" : "Start Monitoring"}
             </Button>
+            <Button variant="ghost" size="sm" onClick={handleSignOut} title="Sign out">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Monitor your posture and track improvements</p>
         </motion.div>
 
-        {/* Status Banner */}
         {isRunning && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -93,25 +119,16 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* Stats Cards */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard icon={Gauge} label="Posture Score" value={`${displayScore}/100`} trend={displayStatus} positive={liveMetrics?.status === "good"} />
-          <StatCard icon={Clock} label="Today's Session" value="3h 24m" trend="2 breaks taken" />
-          <StatCard icon={Bell} label="Alerts Today" value={liveMetrics ? `${liveMetrics.issues.length}` : "7"} trend={liveMetrics ? "Live" : "3 fewer than avg"} positive={liveMetrics ? liveMetrics.issues.length === 0 : true} />
-          <StatCard icon={TrendingUp} label="Weekly Trend" value="+12%" trend="Consistent improvement" positive />
+          <StatCard icon={Clock} label="Today's Session" value="Active" trend={isRunning ? "Recording" : "Not started"} />
+          <StatCard icon={Bell} label="Alerts Today" value={liveMetrics ? `${liveMetrics.issues.length}` : "0"} trend={liveMetrics ? "Live" : "Start to track"} positive={liveMetrics ? liveMetrics.issues.length === 0 : true} />
+          <StatCard icon={TrendingUp} label="Status" value={user ? "Connected" : "—"} trend="Data is being saved" positive />
         </div>
 
-        {/* Main Grid */}
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            <PostureMonitor
-              videoRef={videoRef}
-              landmarks={landmarks}
-              metrics={metrics}
-              isRunning={isRunning}
-              isLoading={isLoading}
-              error={error}
-            />
+            <PostureMonitor videoRef={videoRef} landmarks={landmarks} metrics={metrics} isRunning={isRunning} isLoading={isLoading} error={error} />
             <PostureScoreRing liveMetrics={liveMetrics} />
             <SessionHistory />
           </div>
