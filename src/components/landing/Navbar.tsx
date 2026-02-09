@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Activity, Menu, X } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Navbar = () => {
@@ -24,6 +25,7 @@ const Navbar = () => {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           <Link to="/dashboard">
             <Button variant="ghost" size="sm">Log In</Button>
           </Link>
@@ -32,9 +34,12 @@ const Navbar = () => {
           </Link>
         </div>
 
-        <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-foreground">
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button onClick={() => setIsOpen(!isOpen)} className="text-foreground">
           {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
