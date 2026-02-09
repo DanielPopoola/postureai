@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Camera, Brain, Bell, BarChart3, Heart, Clock } from "lucide-react";
+import featuresImage from "@/assets/features-image.jpg";
 
 const features = [
   {
@@ -51,6 +52,20 @@ const FeaturesSection = () => {
           <p className="text-muted-foreground">
             A comprehensive AI coaching system designed to protect your body during long work sessions.
           </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mx-auto mb-16 max-w-4xl overflow-hidden rounded-2xl border border-border shadow-elevated"
+        >
+          <img
+            src={featuresImage}
+            alt="Futuristic AI posture analysis visualization showing spine alignment and health metrics"
+            className="w-full object-cover"
+            loading="lazy"
+          />
         </motion.div>
 
         <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">

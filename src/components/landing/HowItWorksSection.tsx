@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import howItWorksImage from "@/assets/how-it-works-image.jpg";
 
 const steps = [
   { number: "01", title: "Enable Your Webcam", description: "Grant camera access and the AI begins monitoring your posture instantly." },
@@ -23,23 +24,39 @@ const HowItWorksSection = () => {
           </h2>
         </motion.div>
 
-        <div className="mx-auto grid max-w-4xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.15 }}
-              className="text-center"
-            >
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-lg">
-                {step.number}
-              </div>
-              <h3 className="mb-2 font-semibold text-foreground">{step.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-            </motion.div>
-          ))}
+        <div className="mx-auto max-w-5xl flex flex-col items-center gap-16 lg:flex-row lg:gap-12">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="w-full lg:w-1/2 overflow-hidden rounded-2xl border border-border shadow-elevated"
+          >
+            <img
+              src={howItWorksImage}
+              alt="Person with perfect posture at a modern ergonomic workspace"
+              className="w-full object-cover"
+              loading="lazy"
+            />
+          </motion.div>
+
+          <div className="w-full lg:w-1/2 grid gap-8 sm:grid-cols-2">
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.number}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="text-center lg:text-left"
+              >
+                <div className="mx-auto lg:mx-0 mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-lg">
+                  {step.number}
+                </div>
+                <h3 className="mb-2 font-semibold text-foreground">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
