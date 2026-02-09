@@ -10,11 +10,21 @@ import { useToast } from "@/hooks/use-toast";
 
 type AuthView = "login" | "signup" | "forgot" | "reset";
 
+const validatePassword = (pwd: string) => {
+  const errors: string[] = [];
+  if (pwd.length < 8) errors.push("At least 8 characters");
+  if (!/[A-Z]/.test(pwd)) errors.push("One uppercase letter");
+  if (!/[a-z]/.test(pwd)) errors.push("One lowercase letter");
+  if (!/[0-9]/.test(pwd)) errors.push("One number");
+  return errors;
+};
+
 const Auth = () => {
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,6 +45,17 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate password for signup and reset views
+    if (view === "signup") {
+      const errors = validatePassword(password);
+      setPasswordErrors(errors);
+      if (errors.length > 0) return;
+    }
+    if (view === "reset") {
+      const errors = validatePassword(newPassword);
+      setPasswordErrors(errors);
+      if (errors.length > 0) return;
+    }
     setLoading(true);
     try {
       if (view === "login") {
@@ -101,31 +122,51 @@ const Auth = () => {
                 </div>
               )}
               {(view === "login" || view === "signup") && (
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    minLength={6}
-                  />
+                <div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (view === "signup") setPasswordErrors(validatePassword(e.target.value));
+                      }}
+                      className="pl-10"
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                  {view === "signup" && passwordErrors.length > 0 && (
+                    <ul className="mt-1.5 space-y-0.5 text-xs text-destructive">
+                      {passwordErrors.map((err) => <li key={err}>• {err}</li>)}
+                    </ul>
+                  )}
                 </div>
               )}
               {view === "reset" && (
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    minLength={6}
-                  />
+                <div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="password"
+                      placeholder="New password"
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        setPasswordErrors(validatePassword(e.target.value));
+                      }}
+                      className="pl-10"
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                  {passwordErrors.length > 0 && (
+                    <ul className="mt-1.5 space-y-0.5 text-xs text-destructive">
+                      {passwordErrors.map((err) => <li key={err}>• {err}</li>)}
+                    </ul>
+                  )}
                 </div>
               )}
               {view === "login" && (
