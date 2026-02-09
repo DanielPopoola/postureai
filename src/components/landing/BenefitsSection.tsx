@@ -4,12 +4,12 @@ import benefitsImage from "@/assets/benefits-image.jpg";
 import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const benefits = [
-  "Improved posture and spinal alignment",
-  "Reduced neck and shoulder strain",
-  "Better health awareness during work",
-  "Injury prevention from prolonged sitting",
-  "Increased productivity and focus",
-  "Long-term musculoskeletal protection",
+  "Stronger spinal alignment throughout the day",
+  "Less neck and shoulder tension after long sessions",
+  "Proactive injury prevention — not reactive treatment",
+  "Measurable posture improvement week over week",
+  "More energy and focus from reduced physical strain",
+  "Healthier long-term work habits built on data",
 ];
 
 const BenefitsSection = () => {
@@ -26,11 +26,11 @@ const BenefitsSection = () => {
             <div>
               <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">Benefits</p>
               <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Protect Your Body While You Work
+                Work Longer. Feel Better.
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                PostureAI acts as your preventive health companion — not for diagnosis, but for building 
-                awareness and habits that keep your body safe during remote work.
+                PostureAI is your silent ergonomic companion — building awareness, correcting habits, and 
+                protecting your body so you can do your best work without the aches.
               </p>
             </div>
 
@@ -59,7 +59,7 @@ const BenefitsSection = () => {
           >
             <ParallaxImage
               src={benefitsImage}
-              alt="Person doing neck stretches at their desk for better posture"
+              alt="Professional stretching at her desk for better posture and wellness"
               className="rounded-2xl border border-border shadow-elevated"
               speed={0.15}
             />

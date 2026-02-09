@@ -6,33 +6,33 @@ import ParallaxImage from "@/components/landing/ParallaxImage";
 const features = [
   {
     icon: Camera,
-    title: "Webcam Posture Detection",
-    description: "Uses your webcam and AI computer vision to detect body position and joint angles in real time.",
+    title: "Webcam Pose Detection",
+    description: "No wearables needed. Our AI uses your laptop camera to map 17 body keypoints in real time.",
   },
   {
     icon: Brain,
-    title: "AI Posture Analysis",
-    description: "Machine learning models classify your posture as good, poor, or risky based on medical ergonomics standards.",
+    title: "Intelligent Scoring",
+    description: "Machine learning classifies your posture against medical ergonomics standards and gives you a live score.",
   },
   {
     icon: Bell,
-    title: "Real-Time Coaching Alerts",
-    description: "Instant notifications when your posture needs correction — gentle nudges to keep you aligned.",
+    title: "Gentle Coaching Nudges",
+    description: "Receive non-intrusive alerts the moment your posture drifts — before strain sets in.",
   },
   {
     icon: BarChart3,
-    title: "Analytics Dashboard",
-    description: "Track your posture score, session history, and improvement trends with visual reports.",
+    title: "Detailed Analytics",
+    description: "Visualize your posture trends, session history, and weekly improvement with rich charts.",
   },
   {
     icon: Heart,
-    title: "Medical Ergonomics Standards",
-    description: "Built on established guidelines for spine alignment, neck angle, and shoulder positioning.",
+    title: "Ergonomic Standards",
+    description: "Built on clinical guidelines for spine, neck, and shoulder alignment used by physiotherapists.",
   },
   {
     icon: Clock,
-    title: "Break Reminders",
-    description: "Smart reminders to take breaks based on your session duration and posture patterns.",
+    title: "Smart Break Reminders",
+    description: "Timed reminders adapt to your session length and posture quality so you stretch when it matters.",
   },
 ];
 
@@ -48,10 +48,10 @@ const FeaturesSection = () => {
         >
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">Features</p>
           <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Everything You Need for Healthy Posture
+            Your Complete Posture Toolkit
           </h2>
           <p className="text-muted-foreground">
-            A comprehensive AI coaching system designed to protect your body during long work sessions.
+            Six powerful capabilities working together to keep your body safe during every work session.
           </p>
         </motion.div>
 
@@ -63,7 +63,7 @@ const FeaturesSection = () => {
         >
           <ParallaxImage
             src={featuresImage}
-            alt="Futuristic AI posture analysis visualization showing spine alignment and health metrics"
+            alt="AI posture analytics dashboard with body skeleton overlay, score gauges, and trend charts"
             className="rounded-2xl border border-border shadow-elevated"
             speed={0.15}
           />
