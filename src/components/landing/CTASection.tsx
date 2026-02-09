@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import ctaImage from "@/assets/cta-image.jpg";
+import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const CTASection = () => {
   return (
@@ -15,11 +16,11 @@ const CTASection = () => {
           className="mx-auto max-w-4xl overflow-hidden rounded-2xl shadow-elevated"
         >
           <div className="relative">
-            <img
+            <ParallaxImage
               src={ctaImage}
               alt="Happy remote worker stretching beside their home office setup"
-              className="w-full h-64 object-cover"
-              loading="lazy"
+              className="h-64"
+              speed={0.2}
             />
             <div className="absolute inset-0 gradient-hero opacity-70" />
           </div>

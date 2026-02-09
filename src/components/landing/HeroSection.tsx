@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-image.jpg";
+import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const HeroSection = () => {
   return (
@@ -52,14 +53,13 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="mt-16 w-full max-w-4xl"
         >
-          <div className="overflow-hidden rounded-2xl border border-border shadow-elevated">
-            <img
-              src={heroImage}
-              alt="AI posture analysis showing ergonomic alignment points on a person working at a desk"
-              className="w-full object-cover"
-              loading="eager"
-            />
-          </div>
+          <ParallaxImage
+            src={heroImage}
+            alt="AI posture analysis showing ergonomic alignment points on a person working at a desk"
+            className="rounded-2xl border border-border shadow-elevated"
+            speed={0.12}
+            loading="eager"
+          />
         </motion.div>
       </div>
     </section>
