@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import howItWorksImage from "@/assets/how-it-works-image.jpg";
+import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const steps = [
   { number: "01", title: "Enable Your Webcam", description: "Grant camera access and the AI begins monitoring your posture instantly." },
@@ -29,13 +30,13 @@ const HowItWorksSection = () => {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="w-full lg:w-1/2 overflow-hidden rounded-2xl border border-border shadow-elevated"
+            className="w-full lg:w-1/2"
           >
-            <img
+            <ParallaxImage
               src={howItWorksImage}
               alt="Person with perfect posture at a modern ergonomic workspace"
-              className="w-full object-cover"
-              loading="lazy"
+              className="rounded-2xl border border-border shadow-elevated"
+              speed={0.18}
             />
           </motion.div>
 

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import benefitsImage from "@/assets/benefits-image.jpg";
+import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const benefits = [
   "Improved posture and spinal alignment",
@@ -54,13 +55,13 @@ const BenefitsSection = () => {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="flex-1 overflow-hidden rounded-2xl border border-border shadow-elevated"
+            className="flex-1"
           >
-            <img
+            <ParallaxImage
               src={benefitsImage}
               alt="Person doing neck stretches at their desk for better posture"
-              className="w-full object-cover"
-              loading="lazy"
+              className="rounded-2xl border border-border shadow-elevated"
+              speed={0.15}
             />
           </motion.div>
         </div>

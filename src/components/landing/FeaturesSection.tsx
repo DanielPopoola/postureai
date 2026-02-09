@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Camera, Brain, Bell, BarChart3, Heart, Clock } from "lucide-react";
 import featuresImage from "@/assets/features-image.jpg";
+import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const features = [
   {
@@ -58,13 +59,13 @@ const FeaturesSection = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mx-auto mb-16 max-w-4xl overflow-hidden rounded-2xl border border-border shadow-elevated"
+          className="mx-auto mb-16 max-w-4xl"
         >
-          <img
+          <ParallaxImage
             src={featuresImage}
             alt="Futuristic AI posture analysis visualization showing spine alignment and health metrics"
-            className="w-full object-cover"
-            loading="lazy"
+            className="rounded-2xl border border-border shadow-elevated"
+            speed={0.15}
           />
         </motion.div>
 
