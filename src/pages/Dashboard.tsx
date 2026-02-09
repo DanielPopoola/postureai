@@ -10,20 +10,31 @@ import PostureScoreRing from "@/components/dashboard/PostureScoreRing";
 import SessionHistory from "@/components/dashboard/SessionHistory";
 import AlertsFeed from "@/components/dashboard/AlertsFeed";
 import ErgonomicTips from "@/components/dashboard/ErgonomicTips";
+import GamificationPanel from "@/components/dashboard/GamificationPanel";
+import PostureHeatmap from "@/components/dashboard/PostureHeatmap";
+import AIInsightsPanel from "@/components/dashboard/AIInsightsPanel";
+import ExportMenu from "@/components/dashboard/ExportMenu";
+import NotificationToggle from "@/components/dashboard/NotificationToggle";
 import { usePoseDetection } from "@/hooks/usePoseDetection";
 import { useAuth } from "@/hooks/useAuth";
 import { usePostureSession } from "@/hooks/usePostureSession";
 import { useBreakReminder } from "@/hooks/useBreakReminder";
+import { useGamification } from "@/hooks/useGamification";
+import { useNotifications } from "@/hooks/useNotifications";
 import { PostureMetrics } from "@/lib/postureAnalysis";
+import { differenceInMinutes, parseISO } from "date-fns";
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [liveMetrics, setLiveMetrics] = useState<PostureMetrics | null>(null);
   const prevIssuesRef = useRef<string[]>([]);
+  const sessionStartRef = useRef<Date | null>(null);
 
   const { startSession, endSession, updateMetrics, saveAlert } = usePostureSession(user?.id);
   const { startReminders, stopReminders } = useBreakReminder();
+  const { streak, badges, allBadges, updateStreakOnSessionEnd } = useGamification(user?.id);
+  const { requestPermission, notifyPostureIssue } = useNotifications();
 
   const handleMetricsUpdate = useCallback((m: PostureMetrics) => {
     setLiveMetrics(m);
@@ -31,9 +42,12 @@ const Dashboard = () => {
 
     // Save new alerts that weren't in previous frame
     const newIssues = m.issues.filter(i => !prevIssuesRef.current.includes(i));
-    newIssues.forEach(issue => saveAlert(issue));
+    newIssues.forEach(issue => {
+      saveAlert(issue);
+      notifyPostureIssue(issue);
+    });
     prevIssuesRef.current = m.issues;
-  }, [updateMetrics, saveAlert]);
+  }, [updateMetrics, saveAlert, notifyPostureIssue]);
 
   const { videoRef, landmarks, metrics, isLoading, isRunning, error, start, stop } =
     usePoseDetection({ onMetricsUpdate: handleMetricsUpdate });
@@ -42,10 +56,21 @@ const Dashboard = () => {
     if (isRunning) {
       stop();
       stopReminders();
+      const sessionEnd = new Date();
       await endSession();
+
+      // Update gamification
+      const durationMinutes = sessionStartRef.current
+        ? differenceInMinutes(sessionEnd, sessionStartRef.current)
+        : 0;
+      const avgScore = liveMetrics?.overallScore ?? null;
+      await updateStreakOnSessionEnd(avgScore, durationMinutes);
+
       setLiveMetrics(null);
       prevIssuesRef.current = [];
+      sessionStartRef.current = null;
     } else {
+      sessionStartRef.current = new Date();
       await startSession();
       start();
       startReminders();
@@ -83,7 +108,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ExportMenu />
             <Link to="/history">
               <Button variant="outline" size="sm" className="gap-2">
                 <TrendingUp className="h-4 w-4" /> History
@@ -99,6 +125,7 @@ const Dashboard = () => {
               {isRunning ? <CameraOff className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
               {isLoading ? "Loading..." : isRunning ? "Stop" : "Start Monitoring"}
             </Button>
+            <NotificationToggle onEnable={requestPermission} />
             <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={handleSignOut} title="Sign out">
               <LogOut className="h-4 w-4" />
@@ -130,7 +157,7 @@ const Dashboard = () => {
           <StatCard icon={Gauge} label="Posture Score" value={`${displayScore}/100`} trend={displayStatus} positive={liveMetrics?.status === "good"} />
           <StatCard icon={Clock} label="Today's Session" value="Active" trend={isRunning ? "Recording" : "Not started"} />
           <StatCard icon={Bell} label="Alerts Today" value={liveMetrics ? `${liveMetrics.issues.length}` : "0"} trend={liveMetrics ? "Live" : "Start to track"} positive={liveMetrics ? liveMetrics.issues.length === 0 : true} />
-          <StatCard icon={TrendingUp} label="Status" value={user ? "Connected" : "—"} trend="Data is being saved" positive />
+          <StatCard icon={TrendingUp} label="Streak" value={`${streak?.current_streak ?? 0} days`} trend={`Best: ${streak?.longest_streak ?? 0} days`} positive={(streak?.current_streak ?? 0) > 0} />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -140,6 +167,16 @@ const Dashboard = () => {
             <SessionHistory />
           </div>
           <div className="space-y-6">
+            <PostureHeatmap metrics={liveMetrics} />
+            <GamificationPanel
+              currentStreak={streak?.current_streak ?? 0}
+              longestStreak={streak?.longest_streak ?? 0}
+              totalSessions={streak?.total_sessions ?? 0}
+              goodPostureMinutes={streak?.total_good_posture_minutes ?? 0}
+              badges={badges}
+              allBadgeCount={allBadges.length}
+            />
+            <AIInsightsPanel userId={user?.id} />
             <AlertsFeed liveIssues={isRunning ? liveMetrics?.issues ?? [] : []} />
             <ErgonomicTips />
           </div>

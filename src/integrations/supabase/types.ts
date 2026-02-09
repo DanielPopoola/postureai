@@ -120,6 +120,72 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          badge_description: string
+          badge_icon: string
+          badge_id: string
+          badge_name: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_description: string
+          badge_icon?: string
+          badge_id: string
+          badge_name: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_description?: string
+          badge_icon?: string
+          badge_id?: string
+          badge_name?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: string
+          last_session_date: string | null
+          longest_streak: number
+          total_good_posture_minutes: number
+          total_sessions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_session_date?: string | null
+          longest_streak?: number
+          total_good_posture_minutes?: number
+          total_sessions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_session_date?: string | null
+          longest_streak?: number
+          total_good_posture_minutes?: number
+          total_sessions?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
