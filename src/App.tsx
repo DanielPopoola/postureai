@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import TopLoadingBar from "@/components/TopLoadingBar";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,7 +22,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-        <Suspense fallback={<div className="min-h-screen bg-background" />}>
+        <Suspense fallback={<TopLoadingBar />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
