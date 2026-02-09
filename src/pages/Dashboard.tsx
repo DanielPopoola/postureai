@@ -12,6 +12,7 @@ import ErgonomicTips from "@/components/dashboard/ErgonomicTips";
 import { usePoseDetection } from "@/hooks/usePoseDetection";
 import { useAuth } from "@/hooks/useAuth";
 import { usePostureSession } from "@/hooks/usePostureSession";
+import { useBreakReminder } from "@/hooks/useBreakReminder";
 import { PostureMetrics } from "@/lib/postureAnalysis";
 
 const Dashboard = () => {
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const prevIssuesRef = useRef<string[]>([]);
 
   const { startSession, endSession, updateMetrics, saveAlert } = usePostureSession(user?.id);
+  const { startReminders, stopReminders } = useBreakReminder();
 
   const handleMetricsUpdate = useCallback((m: PostureMetrics) => {
     setLiveMetrics(m);
@@ -38,18 +40,21 @@ const Dashboard = () => {
   const handleToggle = async () => {
     if (isRunning) {
       stop();
+      stopReminders();
       await endSession();
       setLiveMetrics(null);
       prevIssuesRef.current = [];
     } else {
       await startSession();
       start();
+      startReminders();
     }
   };
 
   const handleSignOut = async () => {
     if (isRunning) {
       stop();
+      stopReminders();
       await endSession();
     }
     await signOut();
