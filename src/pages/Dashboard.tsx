@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Activity, ArrowLeft, Bell, Camera, CameraOff, TrendingUp, Clock, Gauge, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Card, CardContent } from "@/components/ui/card";
 import PostureMonitor from "@/components/dashboard/PostureMonitor";
 import PostureScoreRing from "@/components/dashboard/PostureScoreRing";
@@ -98,6 +99,7 @@ const Dashboard = () => {
               {isRunning ? <CameraOff className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
               {isLoading ? "Loading..." : isRunning ? "Stop" : "Start Monitoring"}
             </Button>
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={handleSignOut} title="Sign out">
               <LogOut className="h-4 w-4" />
             </Button>
