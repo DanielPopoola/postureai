@@ -8,9 +8,8 @@ import ParallaxImage from "@/components/landing/ParallaxImage";
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen overflow-hidden pt-16">
-      {/* Background */}
       <div className="absolute inset-0 gradient-hero opacity-[0.03]" />
-      
+
       <div className="container relative mx-auto flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -24,19 +23,19 @@ const HeroSection = () => {
           </div>
 
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Your Personal
-            <span className="block text-primary"> Posture Coach</span>
+            Stop Slouching.
+            <span className="block text-primary">Start Thriving.</span>
           </h1>
 
           <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Real-time AI posture monitoring that helps remote workers prevent strain, 
-            improve alignment, and build healthier work habits — all through your webcam.
+            PostureAI watches your posture through your webcam and coaches you in real time — 
+            so you can work longer, feel better, and protect your spine for years to come.
           </p>
 
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link to="/dashboard">
+            <Link to="/auth">
               <Button size="lg" className="gap-2 px-8 shadow-elevated">
-                Start Monitoring <ArrowRight className="h-4 w-4" />
+                Get Started Free <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <a href="#how-it-works">
@@ -55,7 +54,7 @@ const HeroSection = () => {
         >
           <ParallaxImage
             src={heroImage}
-            alt="AI posture analysis showing ergonomic alignment points on a person working at a desk"
+            alt="AI posture analysis showing spine alignment visualization on a person working at a desk"
             className="rounded-2xl border border-border shadow-elevated"
             speed={0.12}
             loading="eager"

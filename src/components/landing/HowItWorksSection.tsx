@@ -3,10 +3,10 @@ import howItWorksImage from "@/assets/how-it-works-image.jpg";
 import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const steps = [
-  { number: "01", title: "Enable Your Webcam", description: "Grant camera access and the AI begins monitoring your posture instantly." },
-  { number: "02", title: "AI Analyzes Posture", description: "Our pose detection engine tracks 17 body keypoints to evaluate your positioning." },
-  { number: "03", title: "Get Real-Time Feedback", description: "Receive coaching alerts when your posture deviates from ergonomic standards." },
-  { number: "04", title: "Track & Improve", description: "Review your posture analytics and build healthier long-term habits." },
+  { number: "01", title: "Open Your Webcam", description: "One click to grant camera access — no downloads, no hardware." },
+  { number: "02", title: "AI Maps Your Body", description: "Our pose engine tracks 17 keypoints across your neck, shoulders, and spine." },
+  { number: "03", title: "Get Coached Live", description: "Instant, non-intrusive alerts when your alignment slips out of the safe zone." },
+  { number: "04", title: "Watch Yourself Improve", description: "Review your posture score trends and build lasting healthy habits over time." },
 ];
 
 const HowItWorksSection = () => {
@@ -21,7 +21,7 @@ const HowItWorksSection = () => {
         >
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">How It Works</p>
           <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Simple Setup, Powerful Results
+            Better Posture in 60 Seconds
           </h2>
         </motion.div>
 
@@ -34,7 +34,7 @@ const HowItWorksSection = () => {
           >
             <ParallaxImage
               src={howItWorksImage}
-              alt="Person with perfect posture at a modern ergonomic workspace"
+              alt="Four-step process showing webcam setup, AI skeleton detection, alert notification, and analytics chart"
               className="rounded-2xl border border-border shadow-elevated"
               speed={0.18}
             />

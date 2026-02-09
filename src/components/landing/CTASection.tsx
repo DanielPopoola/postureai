@@ -18,7 +18,7 @@ const CTASection = () => {
           <div className="relative">
             <ParallaxImage
               src={ctaImage}
-              alt="Happy remote worker stretching beside their home office setup"
+              alt="Happy remote worker with great posture in a modern home office"
               className="h-64"
               speed={0.2}
             />
@@ -26,14 +26,14 @@ const CTASection = () => {
           </div>
           <div className="gradient-hero p-12 text-center">
             <h2 className="mb-4 text-3xl font-bold tracking-tight text-primary-foreground">
-              Start Improving Your Posture Today
+              Your Spine Will Thank You
             </h2>
             <p className="mb-8 text-primary-foreground/80">
-              Join thousands of remote workers who are protecting their health with AI-powered ergonomic coaching.
+              Join thousands of remote workers who've eliminated back pain and built healthier habits with AI coaching.
             </p>
-            <Link to="/dashboard">
+            <Link to="/auth">
               <Button size="lg" variant="secondary" className="gap-2 px-8 shadow-elevated">
-                Launch Dashboard <ArrowRight className="h-4 w-4" />
+                Start Free Today <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>

@@ -26,10 +26,10 @@ const Navbar = () => {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          <Link to="/dashboard">
+          <Link to="/auth">
             <Button variant="ghost" size="sm">Log In</Button>
           </Link>
-          <Link to="/dashboard">
+          <Link to="/auth">
             <Button size="sm">Get Started</Button>
           </Link>
         </div>
@@ -54,7 +54,7 @@ const Navbar = () => {
               <a href="#features" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground">Features</a>
               <a href="#how-it-works" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground">How It Works</a>
               <a href="#benefits" onClick={() => setIsOpen(false)} className="text-sm text-muted-foreground">Benefits</a>
-              <Link to="/dashboard"><Button className="w-full" size="sm">Get Started</Button></Link>
+              <Link to="/auth"><Button className="w-full" size="sm">Get Started</Button></Link>
             </div>
           </motion.div>
         )}
