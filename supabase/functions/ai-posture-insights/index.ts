@@ -38,21 +38,52 @@ Deno.serve(async (req) => {
 
     const userId = claimsData.claims.sub;
 
-    const { sessions, snapshots } = await req.json();
+    const body = await req.json();
+
+    // Validate input structure and limits
+    if (body.sessions && !Array.isArray(body.sessions)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid sessions format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (body.sessions && body.sessions.length > 100) {
+      return new Response(
+        JSON.stringify({ error: "Too many sessions (max 100)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (body.snapshots && (!Array.isArray(body.snapshots) || body.snapshots.length > 500)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid snapshots format or too many (max 500)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Sanitize and type-coerce input data
+    const sessions = (body.sessions ?? []).map((s: any) => ({
+      average_score: Number(s.average_score) || null,
+      total_alerts: Number(s.total_alerts) || 0,
+      user_id: String(s.user_id ?? ""),
+    }));
+
+    const snapshots = (body.snapshots ?? []).map((s: any) => ({
+      neck_angle: Number(s.neck_angle) || null,
+      spine_angle: Number(s.spine_angle) || null,
+      shoulder_alignment: Number(s.shoulder_alignment) || null,
+    }));
 
     // Verify data belongs to authenticated user
-    if (sessions) {
-      for (const s of sessions) {
-        if (s.user_id && s.user_id !== userId) {
-          return new Response(
-            JSON.stringify({ error: "Forbidden" }),
-            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+    for (const s of sessions) {
+      if (s.user_id && s.user_id !== userId) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 
-    if (!sessions || sessions.length === 0) {
+    if (sessions.length === 0) {
       return new Response(
         JSON.stringify({ insights: ["Start monitoring your posture to get personalized AI insights!"] }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -64,19 +95,17 @@ Deno.serve(async (req) => {
       .reduce((sum: number, s: any) => sum + s.average_score, 0) /
       sessions.filter((s: any) => s.average_score != null).length || 0;
 
-    const totalAlerts = sessions.reduce((sum: number, s: any) => sum + (s.total_alerts ?? 0), 0);
+    const totalAlerts = sessions.reduce((sum: number, s: any) => sum + s.total_alerts, 0);
     const sessionCount = sessions.length;
 
     // Analyze snapshot patterns
     let neckIssues = 0;
     let spineIssues = 0;
     let shoulderIssues = 0;
-    if (snapshots) {
-      for (const snap of snapshots) {
-        if (snap.neck_angle && snap.neck_angle < 150) neckIssues++;
-        if (snap.spine_angle && snap.spine_angle > 15) spineIssues++;
-        if (snap.shoulder_alignment && snap.shoulder_alignment < 80) shoulderIssues++;
-      }
+    for (const snap of snapshots) {
+      if (snap.neck_angle && snap.neck_angle < 150) neckIssues++;
+      if (snap.spine_angle && snap.spine_angle > 15) spineIssues++;
+      if (snap.shoulder_alignment && snap.shoulder_alignment < 80) shoulderIssues++;
     }
 
     const prompt = `You are a posture health expert AI. Analyze this user's posture data and provide 3-5 personalized, actionable insights. Be encouraging but honest.
