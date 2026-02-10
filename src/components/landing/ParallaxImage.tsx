@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ParallaxImageProps {
   src: string;
@@ -11,12 +12,21 @@ interface ParallaxImageProps {
 
 const ParallaxImage = ({ src, alt, speed = 0.15, className = "", loading = "lazy" }: ParallaxImageProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   });
 
   const y = useTransform(scrollYProgress, [0, 1], [`-${speed * 100}%`, `${speed * 100}%`]);
+
+  if (isMobile) {
+    return (
+      <div ref={ref} className={`overflow-hidden ${className}`}>
+        <img src={src} alt={alt} className="w-full h-full object-cover" loading={loading} />
+      </div>
+    );
+  }
 
   return (
     <div ref={ref} className={`overflow-hidden ${className}`}>
