@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import howItWorksImage from "@/assets/how-it-works-image.jpg";
+import howItWorksImage from "@/assets/features-image.jpg";
 import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const steps = [
