@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Camera, Brain, Bell, BarChart3, Heart, Clock } from "lucide-react";
-import featuresImage from "@/assets/how-it-works-image.jpg";
+import featuresImage from "@/assets/features-image.jpg";
 import ParallaxImage from "@/components/landing/ParallaxImage";
 
 const features = [
