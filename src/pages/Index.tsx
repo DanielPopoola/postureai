@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import TopLoadingBar from "@/components/TopLoadingBar";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
@@ -17,7 +18,7 @@ const Index = () => {
     if (!loading && user) navigate("/dashboard", { replace: true });
   }, [user, loading, navigate]);
 
-  if (loading || user) return <div className="min-h-screen bg-background" />;
+  if (loading || user) return <TopLoadingBar />;
 
   return (
     <div className="min-h-screen bg-background">
