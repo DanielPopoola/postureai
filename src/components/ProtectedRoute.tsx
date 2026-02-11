@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-
+import TopLoadingBar from "@/components/TopLoadingBar";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }, [user, loading, navigate]);
 
   if (loading) {
-    return <div className="min-h-screen bg-background" />;
+    return <TopLoadingBar />;
   }
 
   if (!user) return null;
