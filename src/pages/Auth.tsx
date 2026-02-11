@@ -36,10 +36,12 @@ const Auth = () => {
         setView("reset");
         return;
       }
-      if (session && view !== "reset") navigate("/dashboard");
+      if (event === "SIGNED_IN" && session && view !== "reset") {
+        navigate("/dashboard", { replace: true });
+      }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && view !== "reset") navigate("/dashboard");
+      if (session && view !== "reset") navigate("/dashboard", { replace: true });
     });
     return () => subscription.unsubscribe();
   }, [navigate, view]);
