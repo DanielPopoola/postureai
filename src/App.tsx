@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react";
 import TopLoadingBar from "@/components/TopLoadingBar";
-import AuthHashHandler from "@/components/AuthHashHandler";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,7 +19,6 @@ const App = () => (
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthHashHandler />
         <Toaster />
         <Sonner />
         <BrowserRouter>
