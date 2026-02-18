@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, Chrome } from "lucide-react";
+import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -20,26 +20,10 @@ const validatePassword = (pwd: string) => {
 };
 
 const viewConfig = {
-  login: {
-    title: "Welcome back",
-    subtitle: "Sign in to continue your posture journey",
-    cta: "Sign In",
-  },
-  signup: {
-    title: "Get started",
-    subtitle: "Create your free account today",
-    cta: "Create Account",
-  },
-  forgot: {
-    title: "Forgot password?",
-    subtitle: "We'll send a reset link to your email",
-    cta: "Send Reset Link",
-  },
-  reset: {
-    title: "Set new password",
-    subtitle: "Choose a strong password for your account",
-    cta: "Update Password",
-  },
+  login:  { title: "Welcome back",     subtitle: "Sign in to continue your posture journey", cta: "Sign In"        },
+  signup: { title: "Get started",      subtitle: "Create your free account today",            cta: "Create Account" },
+  forgot: { title: "Forgot password?", subtitle: "We'll send a reset link to your email",     cta: "Send Reset Link"},
+  reset:  { title: "Set new password", subtitle: "Choose a strong password for your account", cta: "Update Password"},
 };
 
 const Auth = () => {
@@ -57,23 +41,23 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // onAuthStateChange fires INITIAL_SESSION immediately on mount with the
+    // current session — so this single listener handles both "already logged in"
+    // and "just signed in" without a redundant getSession() call racing against it.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setView("reset");
         return;
       }
-      if (event === "SIGNED_IN" && session && view !== "reset") {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session && view !== "reset") {
         navigate("/dashboard", { replace: true });
       }
     });
 
-    // Check if already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/dashboard", { replace: true });
-    });
-
     return () => subscription.unsubscribe();
-  }, [navigate, view]);
+  // view is intentionally excluded — we only want this to run on mount.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,36 +67,29 @@ const Auth = () => {
       if (view === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast({ title: "Welcome back!", description: "You're now logged in." });
+        // Navigation handled by onAuthStateChange above
 
       } else if (view === "signup") {
         const errors = validatePassword(password);
         if (errors.length > 0) {
           setPasswordErrors(errors);
-          setLoading(false);
           return;
         }
         if (password !== confirmPassword) {
           toast({ title: "Passwords don't match", description: "Please make sure both passwords are the same.", variant: "destructive" });
-          setLoading(false);
           return;
         }
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-          },
+          options: { emailRedirectTo: `${window.location.origin}/auth` },
         });
         if (error) throw error;
         toast({
           title: "Check your email!",
           description: "We sent you a confirmation link. Click it to activate your account.",
         });
-        // Reset form back to login after signup
-        setView("login");
-        setPassword("");
-        setConfirmPassword("");
+        switchView("login");
 
       } else if (view === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -120,19 +97,18 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({ title: "Email sent!", description: "Check your inbox for a password reset link." });
-        setView("login");
+        switchView("login");
 
       } else if (view === "reset") {
         const errors = validatePassword(newPassword);
-        setPasswordErrors(errors);
         if (errors.length > 0) {
-          setLoading(false);
+          setPasswordErrors(errors);
           return;
         }
         const { error } = await supabase.auth.updateUser({ password: newPassword });
         if (error) throw error;
         toast({ title: "Password updated!", description: "You can now sign in with your new password." });
-        setView("login");
+        switchView("login");
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -146,12 +122,10 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-        },
+        options: { redirectTo: `${window.location.origin}/auth` },
       });
       if (error) throw error;
-      // Browser will redirect — no need to setLoading(false)
+      // Browser redirects away — no need to reset loading state
     } catch (err: any) {
       toast({ title: "Google sign-in failed", description: err.message, variant: "destructive" });
       setGoogleLoading(false);
@@ -169,18 +143,15 @@ const Auth = () => {
   };
 
   const config = viewConfig[view];
-  const showMainForm = view !== "reset";
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background px-4 overflow-hidden">
-      {/* Subtle background decoration */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-sm">
-        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -207,7 +178,7 @@ const Auth = () => {
               </CardHeader>
 
               <CardContent className="px-6 pb-6 pt-4 space-y-4">
-                {/* Google OAuth — only on login/signup */}
+                {/* Google OAuth — login and signup only */}
                 {(view === "login" || view === "signup") && (
                   <>
                     <Button
@@ -217,11 +188,10 @@ const Auth = () => {
                       onClick={handleGoogleSignIn}
                       disabled={googleLoading || loading}
                     >
-                      {googleLoading ? (
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
-                      ) : (
-                        <GoogleIcon />
-                      )}
+                      {googleLoading
+                        ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
+                        : <GoogleIcon />
+                      }
                       {view === "signup" ? "Sign up with Google" : "Continue with Google"}
                     </Button>
 
@@ -233,9 +203,8 @@ const Auth = () => {
                   </>
                 )}
 
-                {/* Email/Password Form */}
                 <form onSubmit={handleSubmit} className="space-y-3">
-                  {/* Email — all views except reset */}
+                  {/* Email */}
                   {view !== "reset" && (
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -252,7 +221,7 @@ const Auth = () => {
                     </div>
                   )}
 
-                  {/* Password — login and signup */}
+                  {/* Password */}
                   {(view === "login" || view === "signup") && (
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -270,18 +239,14 @@ const Auth = () => {
                         autoComplete={view === "signup" ? "new-password" : "current-password"}
                         disabled={loading}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                        tabIndex={-1}
-                      >
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   )}
 
-                  {/* Confirm password — signup only */}
+                  {/* Confirm password */}
                   {view === "signup" && (
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -296,18 +261,14 @@ const Auth = () => {
                         autoComplete="new-password"
                         disabled={loading}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirm(!showConfirm)}
-                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                        tabIndex={-1}
-                      >
+                      <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
                         {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   )}
 
-                  {/* New password — reset view */}
+                  {/* New password for reset */}
                   {view === "reset" && (
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -325,18 +286,13 @@ const Auth = () => {
                         autoComplete="new-password"
                         disabled={loading}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                        tabIndex={-1}
-                      >
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   )}
 
-                  {/* Password validation hints */}
                   <AnimatePresence>
                     {passwordErrors.length > 0 && (view === "signup" || view === "reset") && (
                       <motion.ul
@@ -345,83 +301,34 @@ const Auth = () => {
                         exit={{ opacity: 0, height: 0 }}
                         className="space-y-0.5 text-xs text-destructive overflow-hidden"
                       >
-                        {passwordErrors.map((err) => (
-                          <li key={err}>• {err}</li>
-                        ))}
+                        {passwordErrors.map((err) => <li key={err}>• {err}</li>)}
                       </motion.ul>
                     )}
                   </AnimatePresence>
 
-                  {/* Forgot password link — login only */}
                   {view === "login" && (
                     <div className="text-right">
-                      <button
-                        type="button"
-                        onClick={() => switchView("forgot")}
-                        className="text-xs text-primary hover:underline"
-                      >
+                      <button type="button" onClick={() => switchView("forgot")}
+                        className="text-xs text-primary hover:underline">
                         Forgot password?
                       </button>
                     </div>
                   )}
 
-                  <Button
-                    type="submit"
-                    className="w-full h-11 gap-2 font-medium"
-                    disabled={loading || googleLoading}
-                  >
-                    {loading ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
-                    ) : (
-                      <ArrowRight className="h-4 w-4" />
-                    )}
+                  <Button type="submit" className="w-full h-11 gap-2 font-medium" disabled={loading || googleLoading}>
+                    {loading
+                      ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                      : <ArrowRight className="h-4 w-4" />
+                    }
                     {loading ? "Please wait..." : config.cta}
                   </Button>
                 </form>
 
-                {/* Footer links */}
                 <p className="text-center text-sm text-muted-foreground">
-                  {view === "login" && (
-                    <>
-                      Don't have an account?{" "}
-                      <button
-                        onClick={() => switchView("signup")}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        Sign up free
-                      </button>
-                    </>
-                  )}
-                  {view === "signup" && (
-                    <>
-                      Already have an account?{" "}
-                      <button
-                        onClick={() => switchView("login")}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        Sign in
-                      </button>
-                    </>
-                  )}
-                  {view === "forgot" && (
-                    <>
-                      Remember your password?{" "}
-                      <button
-                        onClick={() => switchView("login")}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        Sign in
-                      </button>
-                    </>
-                  )}
-                  {view === "reset" && (
-                    <button
-                      onClick={() => switchView("login")}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      Back to sign in
-                    </button>
-                  )}
+                  {view === "login" && <>Don't have an account?{" "}<button onClick={() => switchView("signup")} className="font-medium text-primary hover:underline">Sign up free</button></>}
+                  {view === "signup" && <>Already have an account?{" "}<button onClick={() => switchView("login")} className="font-medium text-primary hover:underline">Sign in</button></>}
+                  {view === "forgot" && <>Remember your password?{" "}<button onClick={() => switchView("login")} className="font-medium text-primary hover:underline">Sign in</button></>}
+                  {view === "reset" && <button onClick={() => switchView("login")} className="font-medium text-primary hover:underline">Back to sign in</button>}
                 </p>
               </CardContent>
             </Card>
@@ -436,7 +343,6 @@ const Auth = () => {
   );
 };
 
-// Inline Google SVG icon to avoid external dependency
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

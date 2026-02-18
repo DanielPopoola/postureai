@@ -8,31 +8,20 @@ export function useAuth() {
   const initialized = useRef(false);
 
   useEffect(() => {
+    // onAuthStateChange always fires INITIAL_SESSION synchronously-ish on mount,
+    // giving us the current session without a separate getSession() call or timeout.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+
+      // Mark as initialized on the very first event (INITIAL_SESSION).
+      // This removes the 1s timeout that was causing the delayed loading flicker.
       if (!initialized.current) {
         initialized.current = true;
         setLoading(false);
       }
     });
 
-    // Fallback if onAuthStateChange hasn't fired within 1s
-    const timeout = setTimeout(() => {
-      if (!initialized.current) {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (!initialized.current) {
-            initialized.current = true;
-            setUser(session?.user ?? null);
-            setLoading(false);
-          }
-        });
-      }
-    }, 1000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
