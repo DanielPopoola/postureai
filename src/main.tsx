@@ -5,14 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 async function consumeOAuthHashTokens() {
   const hash = window.location.hash;
-  if (!hash || hash.length < 2) return;
+  if (!hash || hash.length < 2) return false;
 
   const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
   const access_token = params.get("access_token");
   const refresh_token = params.get("refresh_token");
 
   // Only handle implicit-flow style callbacks that contain tokens in the hash.
-  if (!access_token || !refresh_token) return;
+  if (!access_token || !refresh_token) return false;
 
   try {
     await supabase.auth.setSession({ access_token, refresh_token });
@@ -21,8 +21,17 @@ async function consumeOAuthHashTokens() {
     const cleanUrl = `${window.location.pathname}${window.location.search}`;
     window.history.replaceState(null, "", cleanUrl);
   }
+
+  return true;
 }
 
-consumeOAuthHashTokens().finally(() => {
-  createRoot(document.getElementById("root")!).render(<App />);
-});
+consumeOAuthHashTokens()
+  .then((consumed) => {
+    // OAuth callbacks often land on "/". Push authenticated users into the protected app.
+    if (consumed && (window.location.pathname === "/" || window.location.pathname === "/auth")) {
+      window.history.replaceState(null, "", "/dashboard");
+    }
+  })
+  .finally(() => {
+    createRoot(document.getElementById("root")!).render(<App />);
+  });
