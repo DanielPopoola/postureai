@@ -171,10 +171,8 @@ const Dashboard = () => {
             <GamificationPanel
               currentStreak={streak?.current_streak ?? 0}
               longestStreak={streak?.longest_streak ?? 0}
-              totalSessions={0}
-              goodPostureMinutes={0}
+              totalSessions={streak?.total_sessions ?? 0}
               badges={badges}
-              allBadgeCount={badges.length}
             />
             <AIInsightsPanel userId={user?.id} />
             <AlertsFeed liveIssues={isRunning ? liveMetrics?.issues ?? [] : []} />
