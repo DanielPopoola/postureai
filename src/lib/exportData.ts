@@ -1,13 +1,9 @@
-import { supabase } from "@/integrations/supabase/client";
+import { api, Session, Snapshot } from "@/lib/api";
 import { format, parseISO } from "date-fns";
 
 export async function exportSessionsCSV() {
-  const { data: sessions, error } = await supabase
-    .from("posture_sessions")
-    .select("*")
-    .order("started_at", { ascending: false });
-
-  if (error || !sessions) throw new Error("Failed to fetch sessions");
+  const { data: sessions } = await api.get<Session[]>("/sessions");
+  if (!sessions?.length) throw new Error("No sessions to export");
 
   const headers = ["Date", "Start Time", "End Time", "Duration (min)", "Avg Score", "Alerts"];
   const rows = sessions.map((s) => {
@@ -19,7 +15,7 @@ export async function exportSessionsCSV() {
       format(start, "HH:mm:ss"),
       end ? format(end, "HH:mm:ss") : "—",
       String(duration),
-      String(s.average_score ?? "—"),
+      String(s.avg_posture_score ?? "—"),
       String(s.total_alerts ?? 0),
     ];
   });
@@ -29,22 +25,17 @@ export async function exportSessionsCSV() {
 }
 
 export async function exportSnapshotsCSV() {
-  const { data: snapshots, error } = await supabase
-    .from("posture_snapshots")
-    .select("*")
-    .order("captured_at", { ascending: false })
-    .limit(1000);
+  const { data: snapshots } = await api.get<Snapshot[]>("/snapshots?limit=1000");
+  if (!snapshots?.length) throw new Error("No snapshots to export");
 
-  if (error || !snapshots) throw new Error("Failed to fetch snapshots");
-
-  const headers = ["Timestamp", "Score", "Status", "Neck Angle", "Spine Angle", "Shoulder Alignment"];
+  const headers = ["Timestamp", "Score", "Status", "Neck Angle", "Spine Angle", "Shoulder Tilt"];
   const rows = snapshots.map((s) => [
     format(parseISO(s.captured_at), "yyyy-MM-dd HH:mm:ss"),
-    String(s.overall_score),
-    s.status,
+    String(s.posture_score),
+    s.posture_state,
     String(s.neck_angle ?? "—"),
     String(s.spine_angle ?? "—"),
-    String(s.shoulder_alignment ?? "—"),
+    String(s.shoulder_tilt ?? "—"),
   ]);
 
   const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
@@ -64,17 +55,13 @@ function downloadFile(content: string, filename: string, mimeType: string) {
 }
 
 export async function generatePDFReport() {
-  const { data: sessions } = await supabase
-    .from("posture_sessions")
-    .select("*")
-    .order("started_at", { ascending: false })
-    .limit(30);
+  const { data: sessions } = await api.get<Session[]>("/sessions?limit=30");
+  if (!sessions?.length) throw new Error("No session data available");
 
-  if (!sessions || sessions.length === 0) throw new Error("No session data available");
-
-  const avgScore = sessions
-    .filter((s) => s.average_score != null)
-    .reduce((sum, s) => sum + s.average_score!, 0) / sessions.filter((s) => s.average_score != null).length || 0;
+  const scored = sessions.filter((s) => s.avg_posture_score != null);
+  const avgScore = scored.length
+    ? scored.reduce((sum, s) => sum + s.avg_posture_score!, 0) / scored.length
+    : 0;
 
   const totalAlerts = sessions.reduce((sum, s) => sum + (s.total_alerts ?? 0), 0);
   const totalMinutes = sessions.reduce((sum, s) => {
@@ -82,7 +69,6 @@ export async function generatePDFReport() {
     return sum + Math.round((parseISO(s.ended_at).getTime() - parseISO(s.started_at).getTime()) / 60000);
   }, 0);
 
-  // Generate simple HTML-based PDF report
   const html = `
 <!DOCTYPE html>
 <html>
@@ -105,22 +91,11 @@ export async function generatePDFReport() {
 <body>
   <h1>📊 PostureAI Report</h1>
   <p>Generated on ${format(new Date(), "MMMM d, yyyy")} • Last ${sessions.length} sessions</p>
-  
   <div class="stats">
-    <div class="stat">
-      <div class="value">${Math.round(avgScore)}</div>
-      <div class="label">Average Score</div>
-    </div>
-    <div class="stat">
-      <div class="value">${sessions.length}</div>
-      <div class="label">Total Sessions</div>
-    </div>
-    <div class="stat">
-      <div class="value">${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m</div>
-      <div class="label">Time Monitored</div>
-    </div>
+    <div class="stat"><div class="value">${Math.round(avgScore)}</div><div class="label">Average Score</div></div>
+    <div class="stat"><div class="value">${sessions.length}</div><div class="label">Total Sessions</div></div>
+    <div class="stat"><div class="value">${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m</div><div class="label">Time Monitored</div></div>
   </div>
-
   <h2>Session History</h2>
   <table>
     <tr><th>Date</th><th>Duration</th><th>Avg Score</th><th>Alerts</th></tr>
@@ -131,15 +106,12 @@ export async function generatePDFReport() {
       return `<tr>
         <td>${format(start, "MMM d, yyyy h:mm a")}</td>
         <td>${dur > 0 ? `${Math.floor(dur / 60)}h ${dur % 60}m` : "—"}</td>
-        <td>${s.average_score ?? "—"}</td>
+        <td>${s.avg_posture_score ?? "—"}</td>
         <td>${s.total_alerts ?? 0}</td>
       </tr>`;
     }).join("")}
   </table>
-
-  <div class="footer">
-    <p>PostureAI — AI-Powered Posture Monitoring</p>
-  </div>
+  <div class="footer"><p>PostureAI — AI-Powered Posture Monitoring</p></div>
 </body>
 </html>`;
 

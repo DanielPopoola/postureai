@@ -1,8 +1,8 @@
 import { useRef, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { PostureMetrics } from "@/lib/postureAnalysis";
 
-const SNAPSHOT_INTERVAL_MS = 5000; // Save a snapshot every 5 seconds
+const SNAPSHOT_INTERVAL_MS = 5000;
 
 export function usePostureSession(userId: string | undefined) {
   const sessionIdRef = useRef<string | null>(null);
@@ -13,54 +13,36 @@ export function usePostureSession(userId: string | undefined) {
 
   const startSession = useCallback(async () => {
     if (!userId) return;
-    const { data, error } = await supabase
-      .from("posture_sessions")
-      .insert({ user_id: userId })
-      .select("id")
-      .single();
-
-    if (error || !data) {
-      console.error("Failed to create session:", error);
-      return;
-    }
+    const { data } = await api.post<{ id: string }>("/sessions/start");
     sessionIdRef.current = data.id;
     scoresRef.current = [];
     alertCountRef.current = 0;
 
-    // Start periodic snapshot saving
     snapshotTimerRef.current = setInterval(() => {
       const m = lastMetricsRef.current;
-      if (m && sessionIdRef.current) {
-        saveSnapshot(m);
-      }
+      if (m && sessionIdRef.current) saveSnapshot(m);
     }, SNAPSHOT_INTERVAL_MS);
   }, [userId]);
 
   const saveSnapshot = useCallback(async (metrics: PostureMetrics) => {
-    if (!userId || !sessionIdRef.current) return;
+    if (!sessionIdRef.current) return;
     scoresRef.current.push(metrics.overallScore);
 
-    await supabase.from("posture_snapshots").insert({
-      session_id: sessionIdRef.current,
-      user_id: userId,
-      overall_score: metrics.overallScore,
+    await api.post(`/sessions/${sessionIdRef.current}/snapshots`, {
+      posture_score: metrics.overallScore,
+      posture_state: metrics.status,
       neck_angle: metrics.neckAngle,
-      shoulder_alignment: metrics.shoulderAlignment,
+      shoulder_tilt: metrics.shoulderAlignment,
       spine_angle: metrics.spineAngle,
-      status: metrics.status,
     });
-  }, [userId]);
+  }, []);
 
   const saveAlert = useCallback(async (message: string) => {
-    if (!userId || !sessionIdRef.current) return;
+    if (!sessionIdRef.current) return;
     alertCountRef.current += 1;
 
-    await supabase.from("posture_alerts").insert({
-      session_id: sessionIdRef.current,
-      user_id: userId,
-      message,
-    });
-  }, [userId]);
+    await api.post(`/sessions/${sessionIdRef.current}/alerts`, { message });
+  }, []);
 
   const updateMetrics = useCallback((metrics: PostureMetrics) => {
     lastMetricsRef.current = metrics;
@@ -71,21 +53,16 @@ export function usePostureSession(userId: string | undefined) {
       clearInterval(snapshotTimerRef.current);
       snapshotTimerRef.current = null;
     }
-
     if (!sessionIdRef.current) return;
 
-    const avgScore = scoresRef.current.length > 0
+    const avg_posture_score = scoresRef.current.length > 0
       ? Math.round(scoresRef.current.reduce((a, b) => a + b, 0) / scoresRef.current.length)
       : null;
 
-    await supabase
-      .from("posture_sessions")
-      .update({
-        ended_at: new Date().toISOString(),
-        average_score: avgScore,
-        total_alerts: alertCountRef.current,
-      })
-      .eq("id", sessionIdRef.current);
+    await api.post(`/sessions/${sessionIdRef.current}/end`, {
+      avg_posture_score,
+      total_alerts: alertCountRef.current,
+    });
 
     sessionIdRef.current = null;
     lastMetricsRef.current = null;

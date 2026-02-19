@@ -10,7 +10,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, RadarChart,
   Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import { usePostureHistory } from "@/hooks/usePostureHistory";
 import { format, parseISO, startOfDay, differenceInMinutes, subDays } from "date-fns";
 
@@ -41,10 +41,10 @@ const History = () => {
     todaySnaps.forEach(s => {
       const hour = format(parseISO(s.captured_at), "h a");
       if (!hourly[hour]) hourly[hour] = { scores: [], neck: [], spine: [], shoulders: [] };
-      hourly[hour].scores.push(s.overall_score);
+      hourly[hour].scores.push(s.posture_score);
       if (s.neck_angle != null) hourly[hour].neck.push(s.neck_angle);
       if (s.spine_angle != null) hourly[hour].spine.push(s.spine_angle);
-      if (s.shoulder_alignment != null) hourly[hour].shoulders.push(s.shoulder_alignment);
+      if (s.shoulder_tilt != null) hourly[hour].shoulders.push(s.shoulder_tilt);
     });
     return Object.entries(hourly).map(([time, v]) => ({
       time,
@@ -65,7 +65,7 @@ const History = () => {
     recentSessions.forEach(s => {
       const day = days[parseISO(s.started_at).getDay()];
       if (!byDay[day]) byDay[day] = { scores: [], durations: [] };
-      if (s.average_score != null) byDay[day].scores.push(s.average_score);
+      if (s.avg_posture_score != null) byDay[day].scores.push(s.avg_posture_score);
       if (s.ended_at) byDay[day].durations.push(differenceInMinutes(parseISO(s.ended_at), parseISO(s.started_at)) / 60);
     });
     return Object.entries(byDay).map(([day, v]) => ({
@@ -85,14 +85,14 @@ const History = () => {
       const duration = end ? differenceInMinutes(end, start) : null;
       const hrs = duration ? Math.floor(duration / 60) : 0;
       const mins = duration ? duration % 60 : 0;
-      const score = s.average_score ?? 0;
+      const score = s.avg_posture_score ?? 0;
       return {
         date: format(start, "MMM d"),
         time: `${format(start, "h:mm a")}${end ? ` – ${format(end, "h:mm a")}` : " – ongoing"}`,
         duration: duration ? `${hrs}h ${mins}m` : "In progress",
         avgScore: score,
         alerts: s.total_alerts ?? 0,
-        status: (score >= 80 ? "good" : score >= 60 ? "fair" : "poor") as "good" | "fair" | "poor",
+        posture_state: (score >= 80 ? "good" : score >= 60 ? "fair" : "poor") as "good" | "fair" | "poor",
       };
     });
   }, [sessions.data]);
@@ -100,7 +100,7 @@ const History = () => {
   // Summary stats
   const avgScore = useMemo(() => {
     if (!sessions.data || sessions.data.length === 0) return 0;
-    const scores = sessions.data.filter(s => s.average_score != null).map(s => s.average_score!);
+    const scores = sessions.data.filter(s => s.avg_posture_score != null).map(s => s.avg_posture_score!);
     return scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
   }, [sessions.data]);
 
@@ -248,7 +248,7 @@ const History = () => {
                     {sessionLog.map((s, i) => (
                       <div key={i} className="flex items-center gap-4 rounded-lg border border-border p-4">
                         <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                          s.status === "good" ? "bg-success" : s.status === "fair" ? "bg-warning" : "bg-destructive"
+                          s.posture_state === "good" ? "bg-success" : s.posture_state === "fair" ? "bg-warning" : "bg-destructive"
                         }`} />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-foreground">{s.date} · {s.time}</p>

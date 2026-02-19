@@ -16,7 +16,7 @@ import AIInsightsPanel from "@/components/dashboard/AIInsightsPanel";
 import ExportMenu from "@/components/dashboard/ExportMenu";
 import NotificationToggle from "@/components/dashboard/NotificationToggle";
 import { usePoseDetection } from "@/hooks/usePoseDetection";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import { usePostureSession } from "@/hooks/usePostureSession";
 import { useBreakReminder } from "@/hooks/useBreakReminder";
 import { useGamification } from "@/hooks/useGamification";
@@ -25,7 +25,7 @@ import { PostureMetrics } from "@/lib/postureAnalysis";
 import { differenceInMinutes, parseISO } from "date-fns";
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [liveMetrics, setLiveMetrics] = useState<PostureMetrics | null>(null);
   const prevIssuesRef = useRef<string[]>([]);
@@ -33,7 +33,7 @@ const Dashboard = () => {
 
   const { startSession, endSession, updateMetrics, saveAlert } = usePostureSession(user?.id);
   const { startReminders, stopReminders } = useBreakReminder();
-  const { streak, badges, allBadges, updateStreakOnSessionEnd } = useGamification(user?.id);
+  const { streak, badges, invalidate} = useGamification(user?.id);
   const { requestPermission, notifyPostureIssue } = useNotifications();
 
   const handleMetricsUpdate = useCallback((m: PostureMetrics) => {
@@ -64,7 +64,7 @@ const Dashboard = () => {
         ? differenceInMinutes(sessionEnd, sessionStartRef.current)
         : 0;
       const avgScore = liveMetrics?.overallScore ?? null;
-      await updateStreakOnSessionEnd(avgScore, durationMinutes);
+      await invalidate();
 
       setLiveMetrics(null);
       prevIssuesRef.current = [];
@@ -83,7 +83,7 @@ const Dashboard = () => {
       stopReminders();
       await endSession();
     }
-    await signOut();
+    await logout();
     navigate("/auth");
   };
 
@@ -171,10 +171,10 @@ const Dashboard = () => {
             <GamificationPanel
               currentStreak={streak?.current_streak ?? 0}
               longestStreak={streak?.longest_streak ?? 0}
-              totalSessions={streak?.total_sessions ?? 0}
-              goodPostureMinutes={streak?.total_good_posture_minutes ?? 0}
+              totalSessions={0}
+              goodPostureMinutes={0}
               badges={badges}
-              allBadgeCount={allBadges.length}
+              allBadgeCount={badges.length}
             />
             <AIInsightsPanel userId={user?.id} />
             <AlertsFeed liveIssues={isRunning ? liveMetrics?.issues ?? [] : []} />
