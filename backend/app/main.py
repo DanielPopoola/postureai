@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import init_db
 import app.models  # noqa: F401 — ensures all models are registered with Base.metadata
-from app.routers import auth
+from app.routers import alerts, auth, gamification, sessions, snapshots
 
 
 settings = get_settings()
@@ -28,6 +28,10 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(sessions.router)
+app.include_router(snapshots.router)
+app.include_router(alerts.router)
+app.include_router(gamification.router)
 
 
 @app.get("/health")
