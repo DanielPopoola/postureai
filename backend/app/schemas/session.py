@@ -18,6 +18,6 @@ class SessionResponse(BaseModel):
 
 
 class EndSessionRequest(BaseModel):
-    avg_posture_score: float
-    good_posture_percent: float
-    total_alerts: int
+    avg_posture_score: float | None = None
+    good_posture_percent: float | None = None  # make optional
+    total_alerts: int = 0

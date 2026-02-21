@@ -13,7 +13,7 @@ export function usePostureSession(userId: string | undefined) {
 
   const startSession = useCallback(async () => {
     if (!userId) return;
-    const { data } = await api.post<{ id: string }>("/sessions/start");
+    const { data } = await api.post<{ id: string }>("/sessions");
     sessionIdRef.current = data.id;
     scoresRef.current = [];
     alertCountRef.current = 0;
@@ -25,24 +25,27 @@ export function usePostureSession(userId: string | undefined) {
   }, [userId]);
 
   const saveSnapshot = useCallback(async (metrics: PostureMetrics) => {
-    if (!sessionIdRef.current) return;
-    scoresRef.current.push(metrics.overallScore);
+  if (!sessionIdRef.current) return;
+  scoresRef.current.push(metrics.overallScore);
+  await api.post("/snapshots", {
+    session_id: sessionIdRef.current,
+    posture_score: metrics.overallScore,
+    posture_state: metrics.status,
+    neck_angle: metrics.neckAngle,
+    shoulder_tilt: metrics.shoulderAlignment,
+    spine_angle: metrics.spineAngle,
+  });
+}, []);
 
-    await api.post(`/sessions/${sessionIdRef.current}/snapshots`, {
-      posture_score: metrics.overallScore,
-      posture_state: metrics.status,
-      neck_angle: metrics.neckAngle,
-      shoulder_tilt: metrics.shoulderAlignment,
-      spine_angle: metrics.spineAngle,
-    });
-  }, []);
-
-  const saveAlert = useCallback(async (message: string) => {
-    if (!sessionIdRef.current) return;
-    alertCountRef.current += 1;
-
-    await api.post(`/sessions/${sessionIdRef.current}/alerts`, { message });
-  }, []);
+  const saveAlert = useCallback(async (message: string, alert_type = "neck") => {
+  if (!sessionIdRef.current) return;
+  alertCountRef.current += 1;
+  await api.post("/alerts", {
+    session_id: sessionIdRef.current,
+    alert_type,
+    message,
+  });
+}, []);
 
   const updateMetrics = useCallback((metrics: PostureMetrics) => {
     lastMetricsRef.current = metrics;

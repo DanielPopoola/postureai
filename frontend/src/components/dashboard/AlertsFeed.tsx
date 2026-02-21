@@ -20,10 +20,11 @@ interface AlertsFeedProps {
 }
 
 const AlertsFeed = ({ liveIssues = [] }: AlertsFeedProps) => {
-  const liveAlerts = liveIssues.map((msg) => ({ type: "warning" as const, message: msg, time: "Now" }));
-  const alerts = liveAlerts.length > 0
-    ? [...liveAlerts, ...defaultAlerts.slice(0, 3)]
-    : defaultAlerts;
+  const alerts = liveIssues.map((msg) => ({
+    type: "warning" as const,
+    message: msg,
+    time: "Now",
+  }));
 
   return (
     <Card className="shadow-soft">
@@ -31,15 +32,23 @@ const AlertsFeed = ({ liveIssues = [] }: AlertsFeedProps) => {
         <CardTitle className="text-base">Recent Alerts</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {alerts.map((alert, i) => (
-          <div key={i} className="flex items-start gap-3 rounded-lg border border-border p-3">
-            <div className="mt-0.5 shrink-0">{iconMap[alert.type as keyof typeof iconMap]}</div>
-            <div className="min-w-0">
-              <p className="text-sm text-foreground">{alert.message}</p>
-              <p className="text-xs text-muted-foreground">{alert.time}</p>
+        {alerts.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No alerts yet — start a session to begin monitoring.
+          </p>
+        ) : (
+          alerts.map((alert, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-lg border border-border p-3">
+              <div className="mt-0.5 shrink-0">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-foreground">{alert.message}</p>
+                <p className="text-xs text-muted-foreground">{alert.time}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
   );

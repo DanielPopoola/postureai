@@ -43,7 +43,11 @@ const Dashboard = () => {
     // Save new alerts that weren't in previous frame
     const newIssues = m.issues.filter(i => !prevIssuesRef.current.includes(i));
     newIssues.forEach(issue => {
-      saveAlert(issue);
+      const alert_type = issue.toLowerCase().includes("neck") ? "neck"
+        : issue.toLowerCase().includes("shoulder") ? "shoulder"
+        : issue.toLowerCase().includes("spine") ? "spine"
+        : "break_reminder";
+      saveAlert(issue, alert_type);
       notifyPostureIssue(issue);
     });
     prevIssuesRef.current = m.issues;
