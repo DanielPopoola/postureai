@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +15,9 @@ router = APIRouter(prefix="/snapshots", tags=["snapshots"])
 
 @router.post("", response_model=SnapshotResponse, status_code=status.HTTP_201_CREATED)
 async def create_snapshot(
-    body: SnapshotCreate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+    body: SnapshotCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
 ):
     # verify session belongs to user
     session = await db.scalar(
@@ -33,11 +37,11 @@ async def create_snapshot(
 
 @router.get("", response_model=list[SnapshotResponse])
 async def list_snapshots(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
     session_id: str | None = None,
     limit: int = 100,
     offset: int = 0,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
 ):
     q = select(PostureSnapshot).where(PostureSnapshot.user_id == user.id)
     if session_id:

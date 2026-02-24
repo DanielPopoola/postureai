@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +15,9 @@ router = APIRouter(prefix="/alerts", tags=["alerts"])
 
 @router.post("", response_model=AlertResponse, status_code=status.HTTP_201_CREATED)
 async def create_alert(
-    body: AlertCreate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+    body: AlertCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
 ):
     session = await db.scalar(
         select(PostureSession).where(
@@ -32,11 +36,11 @@ async def create_alert(
 
 @router.get("", response_model=list[AlertResponse])
 async def list_alerts(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
     session_id: str | None = None,
     limit: int = 50,
     offset: int = 0,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
 ):
     q = select(PostureAlert).where(PostureAlert.user_id == user.id)
     if session_id:
@@ -49,7 +53,9 @@ async def list_alerts(
 
 @router.patch("/{alert_id}/acknowledge", response_model=AlertResponse)
 async def acknowledge_alert(
-    alert_id: str, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+    alert_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
 ):
     alert = await db.scalar(
         select(PostureAlert).where(PostureAlert.id == alert_id, PostureAlert.user_id == user.id)

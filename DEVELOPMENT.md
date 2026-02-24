@@ -195,8 +195,8 @@ Every protected route uses the same dependency injection pattern:
 ```python
 @router.get("/resource")
 async def get_resource(
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)]    ,
 ):
     # All queries must filter by user.id
     result = await db.scalars(select(MyModel).where(MyModel.user_id == user.id))

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from jose import JWTError, jwt
 from sqlalchemy import select
@@ -18,7 +20,7 @@ settings = get_settings()
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-COOKIE_OPTS = dict(httponly=True, secure=False, samesite="lax")  # set secure=True in prod
+COOKIE_OPTS = {"httponly": True, "secure": False, "samesite": "lax"}  # set secure=True in prod
 
 
 def _set_auth_cookies(response: Response, user_id: str):
@@ -37,7 +39,9 @@ def _set_auth_cookies(response: Response, user_id: str):
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(body: RegisterRequest, response: Response, db: AsyncSession = Depends(get_db)):
+async def register(
+    body: RegisterRequest, response: Response, db: Annotated[AsyncSession, Depends(get_db)]
+):
     if await db.scalar(select(User).where(User.email == body.email)):
         raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
 
@@ -53,7 +57,9 @@ async def register(body: RegisterRequest, response: Response, db: AsyncSession =
 
 
 @router.post("/login", response_model=UserResponse)
-async def login(body: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)):
+async def login(
+    body: LoginRequest, response: Response, db: Annotated[AsyncSession, Depends(get_db)]
+):
     user = await db.scalar(select(User).where(User.email == body.email))
     if not user or not verify_password(body.password, user.hashed_password):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
@@ -65,8 +71,8 @@ async def login(body: LoginRequest, response: Response, db: AsyncSession = Depen
 @router.post("/refresh", response_model=UserResponse)
 async def refresh(
     response: Response,
+    db: Annotated[AsyncSession, Depends(get_db)],
     refresh_token: str | None = Cookie(default=None),
-    db: AsyncSession = Depends(get_db),
 ):
     exc = HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token")
     if not refresh_token:
@@ -76,8 +82,8 @@ async def refresh(
             refresh_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
         user_id: str = payload.get("sub")
-    except JWTError:
-        raise exc
+    except JWTError as je:
+        raise exc from je
 
     user = await db.scalar(select(User).where(User.id == user_id))
     if not user:
@@ -95,5 +101,5 @@ async def logout(response: Response):
 
 
 @router.get("/me", response_model=UserResponse)
-async def me(user: User = Depends(get_current_user)):
+async def me(user: Annotated[User, Depends(get_current_user)]):
     return user

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/gamification", tags=["gamification"])
 
 @router.get("", response_model=GamificationResponse)
 async def get_gamification(
-    db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+    db: Annotated[AsyncSession, Depends(get_db)], user: Annotated[User, Depends(get_current_user)]
 ):
     streak = await db.scalar(select(UserStreak).where(UserStreak.user_id == user.id))
     badges = await db.scalars(

@@ -1,4 +1,5 @@
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Annotated
 
 from fastapi import Cookie, Depends, HTTPException, status
 from jose import JWTError, jwt
@@ -9,7 +10,6 @@ from app.config import get_settings
 from app.database import AsyncSessionLocal
 from app.models.user import User
 
-
 settings = get_settings()
 
 
@@ -19,8 +19,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_current_user(
+    db: Annotated[AsyncSession, Depends(get_db)],
     access_token: str | None = Cookie(default=None),
-    db: AsyncSession = Depends(get_db),
 ) -> User:
     credentials_exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -34,8 +34,8 @@ async def get_current_user(
         user_id: str = payload.get("sub")
         if not user_id:
             raise credentials_exc
-    except JWTError:
-        raise credentials_exc
+    except JWTError as je:
+        raise credentials_exc from je
 
     user = await db.scalar(select(User).where(User.id == user_id))
     if not user:

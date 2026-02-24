@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -14,7 +15,9 @@ router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
 @router.post("", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
-async def start_session(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+async def start_session(
+    db: Annotated[AsyncSession, Depends(get_db)], user: Annotated[User, Depends(get_current_user)]
+):
     session = PostureSession(user_id=user.id)
     db.add(session)
     await db.commit()
@@ -26,8 +29,8 @@ async def start_session(db: AsyncSession = Depends(get_db), user: User = Depends
 async def end_session(
     session_id: str,
     body: EndSessionRequest,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
 ):
     session = await db.scalar(
         select(PostureSession).where(
@@ -39,11 +42,9 @@ async def end_session(
     if session.status == "completed":
         raise HTTPException(status.HTTP_409_CONFLICT, "Session already ended")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     session.ended_at = now
-    session.duration_seconds = int(
-        (now - session.started_at.replace(tzinfo=timezone.utc)).total_seconds()
-    )
+    session.duration_seconds = int((now - session.started_at.replace(tzinfo=UTC)).total_seconds())
     session.avg_posture_score = body.avg_posture_score
     session.good_posture_percent = body.good_posture_percent
     session.total_alerts = body.total_alerts
@@ -57,10 +58,10 @@ async def end_session(
 
 @router.get("", response_model=list[SessionResponse])
 async def list_sessions(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
     limit: int = 20,
     offset: int = 0,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
 ):
     rows = await db.scalars(
         select(PostureSession)
@@ -74,7 +75,9 @@ async def list_sessions(
 
 @router.get("/{session_id}", response_model=SessionResponse)
 async def get_session(
-    session_id: str, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+    session_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
 ):
     session = await db.scalar(
         select(PostureSession).where(

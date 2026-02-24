@@ -56,20 +56,20 @@ addopts = [
     "--cov-report=xml",
 ]
 
-    [tool.coverage.run]
-    source = ["src"]
-    omit = ["*/tests/*", "*/__pycache__/*", "*/htmlcov/*", "*/.venv/*"]
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__pycache__/*", "*/htmlcov/*", "*/.venv/*"]
 
-    [tool.coverage.report]
-    exclude_lines = [
-        "pragma: no cover",
-        "def __repr__",
-        "if __name__ == .__main__.:",
-        "raise AssertionError",
-        "raise NotImplementedError",
-    ]
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
 
-    [dependency-groups]
-    dev = [
-        "pytest-cov>=7.0.0",
-    ]
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.0.0",
+]
