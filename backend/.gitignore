@@ -26,6 +26,8 @@ venv/
 ENV/
 env/
 
+.env
+
 # UV
 uv.lock
 
