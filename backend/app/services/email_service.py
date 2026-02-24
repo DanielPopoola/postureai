@@ -11,10 +11,14 @@ async def send_password_reset(to: str, reset_url: str) -> None:
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}"},
             json={
-                "from": f"{settings.SENDER_EMAIL}",
+                "from": "PostureAI <onboarding@resend.dev>",
                 "to": to,
                 "subject": "Reset your password",
                 "html": f'<a href="{reset_url}">Reset password</a>',
+                "headers": {"X-Entity-Ref-ID": ""},  # disables open tracking
+                "tags": [],
+                "click_tracking": False,
             },
+           
         )
         r.raise_for_status()
