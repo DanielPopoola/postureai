@@ -16,8 +16,8 @@ export function useNotifications() {
 
     new Notification(title, {
       body,
-      icon: "/favicon.ico",
-      badge: "/favicon.ico",
+      icon: "/favicon.svg",
+      badge: "/favicon.svg",
     });
   }, []);
 
