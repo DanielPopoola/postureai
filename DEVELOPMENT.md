@@ -35,8 +35,8 @@ This section covers every step from a clean Windows machine.
 ### 2. Clone the Repository
 
 ```powershell
-git clone https://github.com/DanielPopoola/posturepai.git
-cd posturepai
+git clone https://github.com/DanielPopoola/postureai.git
+cd postureai
 git checkout version-1
 ```
 
@@ -89,7 +89,7 @@ Verify it's running:
 ```powershell
 docker compose ps
 ```
-You should see `posturepai-db-1` with status `Up`.
+You should see `postureai-db-1` with status `Up`.
 
 **Run migrations:**
 

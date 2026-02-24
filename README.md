@@ -39,8 +39,8 @@ An AI-powered medical ergonomics coaching system for remote workers. Uses your w
 ### 1. Clone
 
 ```bash
-git clone https://github.com/DanielPopoola/posturepai.git
-cd posturepai
+git clone https://github.com/DanielPopoola/postureai.git
+cd postureai
 git checkout version-1
 ```
 
@@ -95,10 +95,10 @@ App will be live at `http://localhost:5173`.
 ### `backend/.env`
 
 ```env
-DATABASE_URL=postgresql+asyncpg://postgres:yourpassword@localhost:5432/posturepai
+DATABASE_URL=postgresql+asyncpg://postgres:yourpassword@localhost:5432/postureai
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=yourpassword
-POSTGRES_DB=posturepai
+POSTGRES_DB=postureai
 JWT_SECRET=a-long-random-secret-string
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
@@ -154,7 +154,7 @@ VITE_API_URL=http://localhost:8000
 ## Project Structure
 
 ```
-posturepai/
+postureai/
 ├── backend/          # FastAPI app
 ├── frontend/         # React + Vite app
 └── README.md
