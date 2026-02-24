@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 
-type AuthView = "login" | "signup" | "forgot";
+type AuthView = "login" | "signup" | "forgot" | "reset";
 
 const validatePassword = (pwd: string) => {
   const errors: string[] = [];
@@ -20,13 +21,17 @@ const validatePassword = (pwd: string) => {
 };
 
 const viewConfig = {
-  login:  { title: "Welcome back",     subtitle: "Sign in to continue your posture journey", cta: "Sign In"        },
-  signup: { title: "Get started",      subtitle: "Create your free account today",            cta: "Create Account" },
-  forgot: { title: "Forgot password?", subtitle: "We'll send a reset link to your email",     cta: "Send Reset Link"},
+  login:  { title: "Welcome back",      subtitle: "Sign in to continue your posture journey",  cta: "Sign In"         },
+  signup: { title: "Get started",       subtitle: "Create your free account today",             cta: "Create Account"  },
+  forgot: { title: "Forgot password?",  subtitle: "We'll send a reset link to your email",      cta: "Send Reset Link" },
+  reset:  { title: "Set new password",  subtitle: "Enter a new password for your account",      cta: "Reset Password"  },
 };
 
 const Auth = () => {
-  const [view, setView] = useState<AuthView>("login");
+  const [searchParams] = useSearchParams();
+  const resetToken = searchParams.get("token");
+
+  const [view, setView] = useState<AuthView>(resetToken ? "reset" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -58,8 +63,19 @@ const Auth = () => {
         navigate("/dashboard", { replace: true });
 
       } else if (view === "forgot") {
-        // TODO: wire to FastAPI password reset endpoint when implemented
-        toast({ title: "Coming soon", description: "Password reset will be available shortly." });
+        await api.post("/auth/reset-password/request", { email });
+        toast({ title: "Check your email", description: "A reset link has been sent if that account exists." });
+
+      } else if (view === "reset") {
+        const errors = validatePassword(password);
+        if (errors.length > 0) { setPasswordErrors(errors); return; }
+        if (password !== confirmPassword) {
+          toast({ title: "Passwords don't match", description: "Please make sure both passwords are the same.", variant: "destructive" });
+          return;
+        }
+        await api.post("/auth/reset-password/confirm", { token: resetToken, new_password: password });
+        toast({ title: "Password updated", description: "You can now sign in with your new password." });
+        switchView("login");
       }
 
     } catch (err: any) {
@@ -115,26 +131,33 @@ const Auth = () => {
 
               <CardContent className="px-6 pb-6 pt-4 space-y-4">
                 <form onSubmit={handleSubmit} className="space-y-3">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="email" placeholder="Email address" value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 h-11" required autoComplete="email" disabled={loading}
-                    />
-                  </div>
 
-                  {(view === "login" || view === "signup") && (
+                  {/* Email — shown on login, signup, forgot only */}
+                  {view !== "reset" && (
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="email" placeholder="Email address" value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-11" required autoComplete="email" disabled={loading}
+                      />
+                    </div>
+                  )}
+
+                  {/* Password — shown on login, signup, and reset */}
+                  {(view === "login" || view === "signup" || view === "reset") && (
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        type={showPassword ? "text" : "password"} placeholder="Password" value={password}
+                        type={showPassword ? "text" : "password"}
+                        placeholder={view === "reset" ? "New password" : "Password"}
+                        value={password}
                         onChange={(e) => {
                           setPassword(e.target.value);
-                          if (view === "signup") setPasswordErrors(validatePassword(e.target.value));
+                          if (view === "signup" || view === "reset") setPasswordErrors(validatePassword(e.target.value));
                         }}
                         className="pl-10 pr-10 h-11" required minLength={8}
-                        autoComplete={view === "signup" ? "new-password" : "current-password"} disabled={loading}
+                        autoComplete={view === "login" ? "current-password" : "new-password"} disabled={loading}
                       />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
@@ -143,7 +166,8 @@ const Auth = () => {
                     </div>
                   )}
 
-                  {view === "signup" && (
+                  {/* Confirm password — shown on signup and reset */}
+                  {(view === "signup" || view === "reset") && (
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -159,7 +183,7 @@ const Auth = () => {
                   )}
 
                   <AnimatePresence>
-                    {passwordErrors.length > 0 && view === "signup" && (
+                    {passwordErrors.length > 0 && (view === "signup" || view === "reset") && (
                       <motion.ul
                         initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
@@ -186,18 +210,15 @@ const Auth = () => {
                 </form>
 
                 <p className="text-center text-sm text-muted-foreground">
-                  {view === "login" && <>Don't have an account?{" "}<button onClick={() => switchView("signup")} className="font-medium text-primary hover:underline">Sign up free</button></>}
-                  {view === "signup" && <>Already have an account?{" "}<button onClick={() => switchView("login")} className="font-medium text-primary hover:underline">Sign in</button></>}
-                  {view === "forgot" && <>Remember your password?{" "}<button onClick={() => switchView("login")} className="font-medium text-primary hover:underline">Sign in</button></>}
+                  {view === "login"   && <>Don't have an account?{" "}<button onClick={() => switchView("signup")} className="font-medium text-primary hover:underline">Sign up free</button></>}
+                  {view === "signup"  && <>Already have an account?{" "}<button onClick={() => switchView("login")} className="font-medium text-primary hover:underline">Sign in</button></>}
+                  {view === "forgot"  && <>Remember your password?{" "}<button onClick={() => switchView("login")} className="font-medium text-primary hover:underline">Sign in</button></>}
+                  {view === "reset"   && <>Back to{" "}<button onClick={() => switchView("login")} className="font-medium text-primary hover:underline">Sign in</button></>}
                 </p>
               </CardContent>
             </Card>
           </motion.div>
         </AnimatePresence>
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          By continuing, you agree to our Terms of Service and Privacy Policy.
-        </p>
       </div>
     </div>
   );

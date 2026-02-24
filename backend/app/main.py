@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import app.models  # noqa: F401 — ensures all models are registered with Base.metadata
 from app.config import get_settings
-from app.database import init_db
 from app.routers import alerts, auth, gamification, insights, sessions, snapshots
 
 settings = get_settings()

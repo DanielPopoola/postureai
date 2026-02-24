@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
@@ -8,13 +9,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.dependencies import get_current_user, get_db
 from app.models.user import User
-from app.schemas.auth import LoginRequest, RegisterRequest, UserResponse
+from app.schemas.auth import (
+    ForgotPasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    ResetPasswordRequest,
+    UserResponse,
+)
 from app.services.auth_service import (
+    _make_token,
     create_access_token,
     create_refresh_token,
     hash_password,
     verify_password,
 )
+from app.services.email_service import send_password_reset
 
 settings = get_settings()
 
@@ -91,6 +100,40 @@ async def refresh(
 
     _set_auth_cookies(response, user.id)
     return user
+
+
+@router.post("/reset-password/request")
+async def request_password_reset(
+    body: ForgotPasswordRequest, db: Annotated[AsyncSession, Depends(get_db)]
+):
+    user = await db.scalar(select(User).where(User.email == body.email))
+    if not user:
+        return {"detail": "If that email exists, a reset link was sent"}
+
+    token = _make_token(user.id, timedelta(minutes=30))
+    reset_url = f"{settings.FRONTEND_URL}/auth/reset?token={token}"
+    await send_password_reset(user.email, reset_url)
+    return {"detail": "If that email exists, a reset link was sent"}
+
+
+@router.post("/reset-password/confirm")
+async def confirm_password_reset(
+    body: ResetPasswordRequest, db: Annotated[AsyncSession, Depends(get_db)]
+):
+    exc = HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired token")
+    try:
+        payload = jwt.decode(body.token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        user_id = payload.get("sub")
+    except JWTError as je:
+        raise exc from je
+
+    user = await db.scalar(select(User).where(User.id == user_id))
+    if not user:
+        raise exc
+
+    user.hashed_password = hash_password(body.new_password)
+    await db.commit()
+    return {"detail": "Password updated"}
 
 
 @router.post("/logout")

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     GEMINI_API_KEY: str
     RESEND_API_KEY: str = ""
+    SENDER_EMAIL: str = ""
     FRONTEND_URL: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
