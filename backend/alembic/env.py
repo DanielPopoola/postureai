@@ -1,16 +1,17 @@
 import asyncio
 from logging.config import fileConfig
+
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from alembic import context
 
+import app.models.alert  # noqa
+import app.models.gamification  # noqa
+import app.models.session  # noqa
+import app.models.snapshot  # noqa
+import app.models.user  # noqa — forces model registration
+from alembic import context
 from app.config import get_settings
 from app.database import Base
-import app.models.user       # noqa — forces model registration
-import app.models.session    # noqa
-import app.models.snapshot   # noqa
-import app.models.alert      # noqa
-import app.models.gamification  # noqa
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().DATABASE_URL)
@@ -22,7 +23,9 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline():
-    context.configure(url=get_settings().DATABASE_URL, target_metadata=target_metadata, literal_binds=True)
+    context.configure(
+        url=get_settings().DATABASE_URL, target_metadata=target_metadata, literal_binds=True
+    )
     with context.begin_transaction():
         context.run_migrations()
 
