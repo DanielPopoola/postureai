@@ -43,13 +43,13 @@ async def update_streak_and_badges(user_id: str, db: AsyncSession) -> list[str]:
     streak.last_active_date = today
 
     existing_keys = set(
-        row for row in await db.scalars(
-            select(UserBadge.badge_key).where(UserBadge.user_id == user_id)
-        )
+        row
+        for row in await db.scalars(select(UserBadge.badge_key).where(UserBadge.user_id == user_id))
     )
 
     new_badges = [
-        b for b in BADGES
+        b
+        for b in BADGES
         if b.key not in existing_keys and b.check(streak.current_streak, existing_keys)
     ]
 

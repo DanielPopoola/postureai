@@ -12,8 +12,8 @@ _RESPONSE_SCHEMA = types.Schema(
     items=types.Schema(
         type=types.Type.OBJECT,
         properties={
-            "type":    types.Schema(type=types.Type.STRING, enum=["success", "warning", "tip"]),
-            "title":   types.Schema(type=types.Type.STRING),
+            "type": types.Schema(type=types.Type.STRING, enum=["success", "warning", "tip"]),
+            "title": types.Schema(type=types.Type.STRING),
             "message": types.Schema(type=types.Type.STRING),
         },
         required=["type", "title", "message"],

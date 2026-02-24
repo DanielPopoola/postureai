@@ -1,4 +1,4 @@
-from datetime import  datetime, timedelta, UTC
+from datetime import datetime, timedelta, UTC
 
 from jose import jwt
 from passlib.context import CryptContext

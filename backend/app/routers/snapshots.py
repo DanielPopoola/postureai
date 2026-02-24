@@ -12,9 +12,15 @@ router = APIRouter(prefix="/snapshots", tags=["snapshots"])
 
 
 @router.post("", response_model=SnapshotResponse, status_code=status.HTTP_201_CREATED)
-async def create_snapshot(body: SnapshotCreate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+async def create_snapshot(
+    body: SnapshotCreate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+):
     # verify session belongs to user
-    session = await db.scalar(select(PostureSession).where(PostureSession.id == body.session_id, PostureSession.user_id == user.id))
+    session = await db.scalar(
+        select(PostureSession).where(
+            PostureSession.id == body.session_id, PostureSession.user_id == user.id
+        )
+    )
     if not session:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Session not found")
 
@@ -36,5 +42,7 @@ async def list_snapshots(
     q = select(PostureSnapshot).where(PostureSnapshot.user_id == user.id)
     if session_id:
         q = q.where(PostureSnapshot.session_id == session_id)
-    rows = await db.scalars(q.order_by(PostureSnapshot.captured_at.desc()).limit(limit).offset(offset))
+    rows = await db.scalars(
+        q.order_by(PostureSnapshot.captured_at.desc()).limit(limit).offset(offset)
+    )
     return rows.all()

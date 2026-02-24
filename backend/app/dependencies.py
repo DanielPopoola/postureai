@@ -12,6 +12,7 @@ from app.models.user import User
 
 settings = get_settings()
 
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session

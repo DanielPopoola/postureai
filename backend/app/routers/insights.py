@@ -18,7 +18,9 @@ async def get_insights(
     user: User = Depends(get_current_user),
 ):
     session = await db.scalar(
-        select(PostureSession).where(PostureSession.id == body.session_id, PostureSession.user_id == user.id)
+        select(PostureSession).where(
+            PostureSession.id == body.session_id, PostureSession.user_id == user.id
+        )
     )
     if not session:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Session not found")

@@ -11,6 +11,7 @@ from app.routers import alerts, auth, gamification, insights, sessions, snapshot
 
 settings = get_settings()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
@@ -33,6 +34,7 @@ app.include_router(snapshots.router)
 app.include_router(alerts.router)
 app.include_router(gamification.router)
 app.include_router(insights.router)
+
 
 @app.get("/health")
 async def health():

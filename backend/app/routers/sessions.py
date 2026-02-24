@@ -29,7 +29,11 @@ async def end_session(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    session = await db.scalar(select(PostureSession).where(PostureSession.id == session_id, PostureSession.user_id == user.id))
+    session = await db.scalar(
+        select(PostureSession).where(
+            PostureSession.id == session_id, PostureSession.user_id == user.id
+        )
+    )
     if not session:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Session not found")
     if session.status == "completed":
@@ -37,7 +41,9 @@ async def end_session(
 
     now = datetime.now(timezone.utc)
     session.ended_at = now
-    session.duration_seconds = int((now - session.started_at.replace(tzinfo=timezone.utc)).total_seconds())
+    session.duration_seconds = int(
+        (now - session.started_at.replace(tzinfo=timezone.utc)).total_seconds()
+    )
     session.avg_posture_score = body.avg_posture_score
     session.good_posture_percent = body.good_posture_percent
     session.total_alerts = body.total_alerts
@@ -67,8 +73,14 @@ async def list_sessions(
 
 
 @router.get("/{session_id}", response_model=SessionResponse)
-async def get_session(session_id: str, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
-    session = await db.scalar(select(PostureSession).where(PostureSession.id == session_id, PostureSession.user_id == user.id))
+async def get_session(
+    session_id: str, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+):
+    session = await db.scalar(
+        select(PostureSession).where(
+            PostureSession.id == session_id, PostureSession.user_id == user.id
+        )
+    )
     if not session:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Session not found")
     return session

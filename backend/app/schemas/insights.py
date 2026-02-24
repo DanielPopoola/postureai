@@ -14,7 +14,7 @@ class InsightsRequest(BaseModel):
 
 
 class Insight(BaseModel):
-    type: str   # success | warning | tip
+    type: str  # success | warning | tip
     title: str
     message: str
 
