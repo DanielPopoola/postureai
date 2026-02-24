@@ -49,3 +49,6 @@ coverage.xml
 # OS
 .DS_Store
 Thumbs.db
+
+#
+alembic/versions/*
