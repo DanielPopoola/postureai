@@ -95,7 +95,7 @@ const Dashboard = () => {
     if (!user) navigate("/auth");
   }, [user, navigate]);
 
-  const displayScore = liveMetrics?.overallScore ?? 82;
+  const displayScore = liveMetrics?.overallScore
   const displayStatus = liveMetrics ? (liveMetrics.status === "good" ? "Healthy" : liveMetrics.status === "fair" ? "Needs adjustment" : "Correct now") : "Start monitoring";
 
   return (
@@ -158,7 +158,7 @@ const Dashboard = () => {
         )}
 
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={Gauge} label="Posture Score" value={`${displayScore}/100`} trend={displayStatus} positive={liveMetrics?.status === "good"} />
+          <StatCard icon={Gauge} label="Posture Score" value={liveMetrics ? `${displayScore}/100` : "—"} trend={displayStatus} positive={liveMetrics?.status === "good"} />
           <StatCard icon={Clock} label="Today's Session" value="Active" trend={isRunning ? "Recording" : "Not started"} />
           <StatCard icon={Bell} label="Alerts Today" value={liveMetrics ? `${liveMetrics.issues.length}` : "0"} trend={liveMetrics ? "Live" : "Start to track"} positive={liveMetrics ? liveMetrics.issues.length === 0 : true} />
           <StatCard icon={TrendingUp} label="Streak" value={`${streak?.current_streak ?? 0} days`} trend={`Best: ${streak?.longest_streak ?? 0} days`} positive={(streak?.current_streak ?? 0) > 0} />

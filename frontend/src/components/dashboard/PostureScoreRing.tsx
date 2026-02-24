@@ -7,10 +7,23 @@ interface Props {
 }
 
 const PostureScoreRing = ({ liveMetrics }: Props) => {
-  const score = liveMetrics?.overallScore ?? 82;
-  const neckVal = liveMetrics ? Math.min(100, Math.round((liveMetrics.neckAngle / 180) * 100)) : 75;
-  const shoulderVal = liveMetrics?.shoulderAlignment ?? 82;
-  const spineVal = liveMetrics ? Math.max(0, 100 - liveMetrics.spineAngle * 3) : 88;
+  if (!liveMetrics) {
+    return (
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="text-base">Current Posture Score</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <p className="text-sm text-muted-foreground">Start monitoring to see your posture score</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const score = liveMetrics.overallScore;
+  const neckVal = Math.min(100, Math.round((liveMetrics.neckAngle / 180) * 100));
+  const shoulderVal = liveMetrics.shoulderAlignment;
+  const spineVal = Math.max(0, 100 - liveMetrics.spineAngle * 3);
   const circumference = 2 * Math.PI * 60;
   const offset = circumference - (score / 100) * circumference;
 
